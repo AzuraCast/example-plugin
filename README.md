@@ -8,7 +8,7 @@ Plugins are automatically discovered if they're located in the `/plugins` direct
 
 ### Traditional Installations
 
-You should clone the repository for your plugin directory into the `plugins` directory, like so:
+You should clone the repository for your plugin directly into the `plugins` directory, like so:
 
 ```bash
 mkdir -p /var/azuracast/www/plugins/example-plugin
