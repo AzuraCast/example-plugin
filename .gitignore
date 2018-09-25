@@ -1,0 +1,13 @@
+# Node Modules
+node_modules
+
+# Junk/cache files.
+*Thumbs.db
+tmp/cache/*---*
+*.DS_Store
+*.apdisk
+.vagrant
+.idea
+
+# Composer-generated content
+/vendor/

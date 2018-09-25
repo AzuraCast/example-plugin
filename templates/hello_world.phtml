@@ -1,0 +1,13 @@
+<?php $this->layout('minimal', ['title' => __('Hello World!'), 'page_class' => 'four-zero-content']) ?>
+
+<div class="four-zero">
+    <div class="fz-block">
+        <h2>200</h2>
+        <small>Hello World!</small>
+
+        <div class="fzb-links">
+            <a href="javascript:history.back()"><i class="zmdi zmdi-arrow-back"></i></a>
+            <a href="<?=$router->named('home') ?>"><i class="zmdi zmdi-home"></i></a>
+        </div>
+    </div>
+</div>
