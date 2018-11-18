@@ -1,7 +1,7 @@
 <?php
-use App\Event;
+use Azura\Event;
 
-return function (\App\EventDispatcher $dispatcher)
+return function (\Azura\EventDispatcher $dispatcher)
 {
     // Add the "example:list-stations" command to the CLI prompt.
     $dispatcher->addListener(Event\BuildConsoleCommands::NAME, function (Event\BuildConsoleCommands $event) {
@@ -21,7 +21,7 @@ return function (\App\EventDispatcher $dispatcher)
 
         $app->get('/example', \Plugin\ExamplePlugin\Controller\HelloWorld::class)
             ->setName('example-plugin:index:index')
-            ->add(\App\Middleware\EnableView::class);
+            ->add(\Azura\Middleware\EnableView::class);
     });
 
     // You can also add classes that implement the EventSubscriberInterface

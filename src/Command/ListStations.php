@@ -1,7 +1,9 @@
 <?php
 namespace Plugin\ExamplePlugin\Command;
 
-class ListStations extends \App\Console\Command\CommandAbstract
+use Azura\Console\Command\CommandAbstract;
+
+class ListStations extends CommandAbstract
 {
     /**
      * {@inheritdoc}

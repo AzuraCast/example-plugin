@@ -1,4 +1,4 @@
 <?php
-return function (\Slim\Container $di, $settings) {
+return function (\Azura\Container $di) {
     // Add your own Dependency Injector services here
 };
