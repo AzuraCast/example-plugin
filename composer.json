@@ -1,0 +1,17 @@
+{
+    "name": "azuracast/example-plugin",
+    "description": "An example AzuraCast plugin, demonstrating the capabilities and common use-cases of the plugin system.",
+    "type": "azuracast-plugin",
+    "authors": [
+        {
+            "name": "Buster Neece",
+            "email": "buster@busterneece.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Plugin\\ExamplePlugin\\": "src"
+        }
+    },
+    "require": {}
+}
