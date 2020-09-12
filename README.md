@@ -66,15 +66,15 @@ Here is an example of a basic `events.php` file for handling an event:
 <?php
 return function (\App\EventDispatcher $dispatcher)
 {
-    $dispatcher->addListener(\App\Event\BuildRoutes::NAME, function(\App\Event\BuildRoutes $event) {
+    $dispatcher->addListener(\App\Event\BuildRoutes::class, function(\App\Event\BuildRoutes $event) {
         $app = $event->getApp();
-        
+
         // Modify the app's routes here
     }, -5);
 };
 ```
 
-As you can see, each event's name is available as a constant on its class named `::NAME`, and each event listener receives an instance of that event class complete with relevant metadata already attached. Listeners also have a priority (the last argument in the function call); this number can be positive or negative, with the default handler tending to be around zero. Higher numbers are dispatched before lower numbers.
+As you can see, each event listener that you register has to provide the event that it listens to as a callable to the `addListener` method's first parameter, and each event listener receives an instance of that event class complete with relevant metadata already attached. Listeners also have a priority (the last argument in the function call); this number can be positive or negative, with the default handler tending to be around zero. Higher numbers are dispatched before lower numbers.
 
 Below is a listing of the events that can be overridden by plugins:
 

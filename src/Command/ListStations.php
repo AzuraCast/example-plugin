@@ -1,27 +1,21 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Plugin\ExamplePlugin\Command;
 
-use Azura\Console\Command\CommandAbstract;
+use App\Console\Command\CommandAbstract;
+use App\Radio\Adapters;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class ListStations extends CommandAbstract
 {
-    /**
-     * {@inheritdoc}
-     */
-    protected function configure()
-    {
-        $this->setName('example:list-stations')
-            ->setDescription('An example function to list stations in a table view.');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function execute(
-        \Symfony\Component\Console\Input\InputInterface $input,
-        \Symfony\Component\Console\Output\OutputInterface $output
+    public function __invoke(
+        SymfonyStyle $io,
+        Adapters $adapters,
+        EntityManagerInterface $entityManager
     ) {
-        $io = new \Symfony\Component\Console\Style\SymfonyStyle($input, $output);
         $io->title('Example Plugin: Stations');
 
         $headers = [
@@ -34,13 +28,7 @@ class ListStations extends CommandAbstract
 
         $rows = [];
 
-        /** @var \App\Radio\Adapters $adapters */
-        $adapters = $this->get(\App\Radio\Adapters::class);
-
-        /** @var \Doctrine\ORM\EntityManager $em */
-        $em = $this->get(\Doctrine\ORM\EntityManager::class);
-
-        $stations = $em
+        $stations = $entityManager
             ->getRepository(\App\Entity\Station::class)
             ->findAll();
 
@@ -59,12 +47,7 @@ class ListStations extends CommandAbstract
             ];
         }
 
-
-        $table = (new \Symfony\Component\Console\Helper\Table($output))
-            ->setHeaders($headers)
-            ->setRows($rows);
-
-        $table->render();
+        $io->table($headers, $rows);
 
         return 0;
     }

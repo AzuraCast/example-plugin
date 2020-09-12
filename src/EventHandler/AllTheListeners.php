@@ -1,7 +1,11 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Plugin\ExamplePlugin\EventHandler;
 
 use App\Event;
+use NowPlaying\Result\Result;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class AllTheListeners implements EventSubscriberInterface
@@ -27,7 +31,7 @@ class AllTheListeners implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            Event\Radio\GenerateRawNowPlaying::NAME => [
+            Event\Radio\GenerateRawNowPlaying::class => [
                 ['setListenerCount', -20]
             ],
         ];
@@ -35,12 +39,12 @@ class AllTheListeners implements EventSubscriberInterface
 
     public function setListenerCount(Event\Radio\GenerateRawNowPlaying $event)
     {
-        $np_raw = $event->getRawResponse();
+        $np_raw = $event->getResult()->toArray();
 
         $np_raw['listeners']['current'] = mt_rand(5, 25);
         $np_raw['listeners']['unique'] = mt_rand(0, $np_raw['listeners']['current']);
         $np_raw['listeners']['total'] = $np_raw['listeners']['current'];
 
-        $event->setRawResponse($np_raw);
+        $event->setResult(Result::fromArray($np_raw));
     }
 }
