@@ -7,8 +7,13 @@ namespace Plugin\ExamplePlugin\Command;
 use App\Console\Command\CommandAbstract;
 use App\Radio\Adapters;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+#[AsCommand(
+    name: 'example:list-stations',
+    description: 'An example function to list stations in a table view.',
+)]
 class ListStations extends CommandAbstract
 {
     public function __invoke(

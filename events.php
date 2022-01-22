@@ -3,17 +3,15 @@
 declare(strict_types=1);
 
 use App\Event;
+use Azura\SlimCallableEventDispatcher\CallableEventDispatcherInterface;
 
-return function (\App\EventDispatcher $dispatcher)
+return function (CallableEventDispatcherInterface $dispatcher)
 {
     // Add the "example:list-stations" command to the CLI prompt.
     $dispatcher->addListener(Event\BuildConsoleCommands::class, function (Event\BuildConsoleCommands $event) {
-        $console = $event->getConsole();
-
-        $console->command(
-            'example:list-stations',
-            \Plugin\ExamplePlugin\Command\ListStations::class,
-        )->setDescription('An example function to list stations in a table view.');
+        $event->addAliases([
+            'example:list-stations' => \Plugin\ExamplePlugin\Command\ListStations::class,
+        ]);
     }, -1);
 
     // Tell the view handler to look for templates in this directory too
