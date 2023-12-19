@@ -5,17 +5,31 @@ declare(strict_types=1);
 namespace Plugin\ExamplePlugin\Command;
 
 use App\Console\Command\CommandAbstract;
+use App\Container\EntityManagerAwareTrait;
+use App\Entity\Station;
 use App\Radio\Adapters;
-use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class ListStations extends CommandAbstract
+#[AsCommand(
+    name: 'example:list-stations',
+    description: 'An example function to list stations in a table view.',
+)]
+final class ListStations extends CommandAbstract
 {
-    public function __invoke(
-        SymfonyStyle $io,
-        Adapters $adapters,
-        EntityManagerInterface $entityManager
+    use EntityManagerAwareTrait;
+
+    public function __construct(
+        private readonly Adapters $adapters
     ) {
+        parent::__construct();
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $io = new SymfonyStyle($input, $output);
         $io->title('Example Plugin: Stations');
 
         $headers = [
@@ -28,21 +42,20 @@ class ListStations extends CommandAbstract
 
         $rows = [];
 
-        $stations = $entityManager
-            ->getRepository(\App\Entity\Station::class)
-            ->findAll();
+        $stations = $this->em->getRepository(Station::class)->findAll();
 
+        /** @var Station $station */
         foreach($stations as $station) {
-            /** @var \App\Entity\Station $station */
-
-            $backend = $adapters->getBackendAdapter($station);
-            $frontend = $adapters->getFrontendAdapter($station);
+            $backend = $this->adapters->getBackendAdapter($station);
+            $frontend = $this->adapters->getFrontendAdapter($station);
 
             $rows[] = [
                 $station->getId(),
                 $station->getName(),
-                ucfirst($station->getBackendType()).' ('.($backend->isRunning($station) ? 'Running' : 'Stopped').')',
-                ucfirst($station->getFrontendType()).' ('.($frontend->isRunning($station) ? 'Running' : 'Stopped').')',
+                $station->getBackendType()
+                    ->getName() . ' (' . ($backend->isRunning($station) ? 'Running' : 'Stopped') . ')',
+                $station->getFrontendType()
+                    ->getName() . ' (' . ($frontend->isRunning($station) ? 'Running' : 'Stopped') . ')',
                 $station->getRemotes()->count(),
             ];
         }

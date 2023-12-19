@@ -1,38 +1,34 @@
 # Extending AzuraCast with Plugins
 
-This repository contains documentation for the AzuraCast plugin system, as well as a working example of some of the more common modifications that might be made to the AzuraCast system via plugins.
+This repository contains documentation for the AzuraCast plugin system, as well as a working example of some of the more
+common modifications that might be made to the AzuraCast system via plugins.
+
+More information on plugins is available via
+the [AzuraCast Documentation](https://www.azuracast.com/docs/developers/plugins/).
 
 ## Including Plugins
 
-Plugins are automatically discovered if they're located in the `/plugins` directory relative to the main AzuraCast installation. Plugins are ignored by the parent AzuraCast instance, so you can update your instance any time you like without worrying about your plugins being removed.
-
-### Traditional Installations
-
-You should clone the repository for your plugin directly into the `plugins` directory, like so:
-
-```bash
-mkdir -p /var/azuracast/www/plugins/example-plugin
-cd /var/azuracast/www/plugins/example-plugin
-git clone https://github.com/AzuraCast/example-plugin.git .
-```
+Plugins are automatically discovered if they're located in the `/plugins` directory relative to the main AzuraCast
+installation. Plugins are ignored by the parent AzuraCast instance, so you can update your instance any time you like
+without worrying about your plugins being removed.
 
 ### Docker Installations
 
-You can clone the plugin directory anywhere you want on the host machine, then update your `docker-compose.yml` to mount the plugin as a volume in the correct location, like so:
+You can clone the plugin directory anywhere you want on the host machine, though it's recommended to have it as a
+subdirectory of your AzuraCast install directory (like `/var/azuracast`). To mount the plugin as a volume so Docker
+recognizes it, you should create a new file named `docker-compose.override.yml` alongside the
+existing `docker-compose.yml` file. If you already have such a file, you can update it to include the extra lines.
 
 ```yaml
-version: '2.2'
-
 services:
   web:
-    # image, depends_on, environment, etc...
+    environment:
+      AZURACAST_PLUGIN_MODE: true
     volumes:
       - ./path_to_plugin:/var/azuracast/www/plugins/example-plugin
-      - www_data:/var/azuracast/www
-      - tmp_data:/var/azuracast/www_tmp
 ```
 
-Make sure to restart the Docker containers afterward (using `docker-compose down` and `docker-compose up -d`).
+Make sure to restart the Docker containers afterward (using `./docker.sh restart`).
 
 ## Naming Convention
 
@@ -60,68 +56,49 @@ For example, `/plugins/example-plugin/src` will autoload classes in the `\Plugin
 
 Most of the extensibility of plugins comes from events that use the EventDispatcher in AzuraCast. Both classes from inside AzuraCast and plugins are registered as "listeners" to common events that are dispatched by the system, so you can override or modify the core application's responses simply by adding your own listeners in the right order.
 
-Here is an example of a basic `events.php` file for handling an event:
-
-```php
-<?php
-return function (\App\EventDispatcher $dispatcher)
-{
-    $dispatcher->addListener(\App\Event\BuildRoutes::class, function(\App\Event\BuildRoutes $event) {
-        $app = $event->getApp();
-
-        // Modify the app's routes here
-    }, -5);
-};
-```
+See the `events.php` file included in this sample repository for an example of common events to listen to.
 
 As you can see, each event listener that you register has to provide the event that it listens to as a callable to the `addListener` method's first parameter, and each event listener receives an instance of that event class complete with relevant metadata already attached. Listeners also have a priority (the last argument in the function call); this number can be positive or negative, with the default handler tending to be around zero. Higher numbers are dispatched before lower numbers.
 
 Below is a listing of the events that can be overridden by plugins:
 
-### `\App\Event\BuildConsoleCommands`
+### General Events
 
-- [Class reference](https://github.com/AzuraCast/AzuraCast/blob/master/src/Event/BuildConsoleCommands.php)
+- [`\App\Event\BuildConsoleCommands`](https://github.com/AzuraCast/AzuraCast/blob/main/src/Event/BuildConsoleCommands.php):
+  Register commands that will be available for invocation via the command-line interface (CLI).
+- [`\App\Event\BuildRoutes`](https://github.com/AzuraCast/AzuraCast/blob/main/src/Event/BuildRoutes.php): Add URL
+  routes that will direct to controllers.
+- [`\App\Event\BuildView`](https://github.com/AzuraCast/AzuraCast/blob/main/src/Event/BuildView.php): Configure the
+  template engine and register your own template folders.
+- [`\App\Event\BuildPermissions`](https://github.com/AzuraCast/AzuraCast/blob/main/src/Event/BuildPermissions.php):
+  Register new permissions that are used by the Access Control List (ACL)
+- [`\App\Event\GetNotifications`](https://github.com/AzuraCast/AzuraCast/blob/main/src/Event/GetNotifications.php):
+  Register new notifications shown to logged in users on the main dashboard page.
+- [`\App\Event\GetSyncTasks`](https://github.com/AzuraCast/AzuraCast/blob/main/src/Event/GetSyncTasks.php): Register new
+  synchronized (cron) tasks to happen in the background automatically.
 
-This event allows you to register your own CLI console commands, which appear when running the [AzuraCast CLI](http://www.azuracast.com/cli.html).
+### Media Events
 
-### `\App\Event\BuildRoutes`
+- [`\App\Event\Media\GetAlbumArt`](https://github.com/AzuraCast/AzuraCast/blob/main/src/Event/Media/GetAlbumArt.php):
+  Return the album art for a given track.
+- [`\App\Event\Media\ReadMetadata`](https://github.com/AzuraCast/AzuraCast/blob/main/src/Event/Media/ReadMetadata.php):
+  Fetch metadata about a media file.
+- [`\App\Event\Media\WriteMetadata`](https://github.com/AzuraCast/AzuraCast/blob/main/src/Event/Media/WriteMetadata.php):
+  Write metadata changes back to the media file.
 
-- [Class reference](https://github.com/AzuraCast/AzuraCast/blob/master/src/Event/BuildRoutes.php)
+### NGINX Events
 
-This event allows you to register custom routes to the HTTP Router. This allows you to create entirely new routes handled exclusively by your plugins.
+- [`\App\Event\Nginx\WriteNginxConfiguration`](https://github.com/AzuraCast/AzuraCast/blob/main/src/Event/Nginx/WriteNginxConfiguration.php):
+  Write the per-station custom nginx configuration section.
 
-### `\App\Event\BuildView`
+### Radio Events
 
-- [Class reference](https://github.com/AzuraCast/AzuraCast/blob/master/src/Event/BuildView.php)
-
-This event lets you inject custom data into the template renderer, or modify the existing data that's already injected. This includes the current user, current station, page title, etc.
-
-### `\App\Event\SendWebhooks`
-
-- [Class reference](https://github.com/AzuraCast/AzuraCast/blob/master/src/Event/SendWebhooks.php)
-
-This event is triggered any time web hooks are triggered for a station. It includes the current "now playing" data along with a list of the triggers that are associated with the webhook (i.e. if the song changed, DJ connected/disconnected, etc).
-
-### `\App\Event\Radio\AnnotateNextSong`
-
-- [Class reference](https://github.com/AzuraCast/AzuraCast/blob/master/src/Event/Radio/AnnotateNextSong.php)
-
-This event is triggered once the next song has been determined by the AzuraCast AutoDJ software and is being sent to Liquidsoap. Annotations allow you to customize fade-in, fade-out, cue-in and cue-out data, and the artist/title displayed for a song.
-
-### `\App\Event\Radio\GenerateRawNowPlaying`
-
-- [Class reference](https://github.com/AzuraCast/AzuraCast/blob/master/src/Event/Radio/GenerateRawNowPlaying.php)
-
-This event is triggered when building the "Now Playing" data for a given station. This data is called "raw" because it has not been converted yet into the standardized API response format served by AzuraCast's API. By modifying the "raw" nowplaying response, you can change the currently playing song or modify the listener count.
-
-### `\App\Event\Radio\GetNextSong`
-
-- [Class reference](https://github.com/AzuraCast/AzuraCast/blob/master/src/Event/Radio/GetNextSong.php)
-
-This event is triggered as the AzuraCast AutoDJ is determining the next song to play for a given station. By default, ths checks for an existing "next song" record in the database, and if one isn't present, determines what should play next based on all available playlists and their scheduling status.
-
-### `\App\Event\Radio\WriteLiquidsoapConfiguration`
-
-- [Class reference](https://github.com/AzuraCast/AzuraCast/blob/master/src/Event/Radio/WriteLiquidsoapConfiguration.php)
-
-This event is triggered when changes to the Liquidsoap configuration are being written to disk. This process uses the Event Dispatcher because it is by far the most complex configuration file written by the system, and there are multiple points at which one may want to override the configuration written by AzuraCast itself. Users are already able to write custom configuration to one specific location (between the playlists being built and mixed with the live signal, and the signal being broadcast to local and remote sources), but overriding this event allows you to modify the configuration in any other location.
+- [`\App\Event\Radio\AnnotateNextSong`](https://github.com/AzuraCast/AzuraCast/blob/main/src/Event/Radio/AnnotateNextSong.php):
+  Convert the metadata about a track into the "annotations" format used by Liquidsoap.
+- [`\App\Event\Radio\BuildQueue`](https://github.com/AzuraCast/AzuraCast/blob/main/src/Event/Radio/BuildQueue.php):
+  Build the upcoming song playback queue for a station.
+- [`\App\Event\Radio\GenerateRawNowPlaying`](https://github.com/AzuraCast/AzuraCast/blob/main/src/Event/Radio/GenerateRawNowPlaying.php):
+  Ping the local mount points and remote relays to assemble a "raw" Now Playing response that AzuraCast will add rich
+  metadata to.
+- [`\App\Event\Radio\WriteLiquidsoapConfiguration`](https://github.com/AzuraCast/AzuraCast/blob/main/src/Event/Radio/WriteLiquidsoapConfiguration.php):
+  Add custom code to the Liquidsoap configuration for a given station.

@@ -2,19 +2,18 @@
 
 declare(strict_types=1);
 
+use App\CallableEventDispatcherInterface;
 use App\Event;
 
-return function (\App\EventDispatcher $dispatcher)
-{
-    // Add the "example:list-stations" command to the CLI prompt.
-    $dispatcher->addListener(Event\BuildConsoleCommands::class, function (Event\BuildConsoleCommands $event) {
-        $console = $event->getConsole();
-
-        $console->command(
-            'example:list-stations',
-            \Plugin\ExamplePlugin\Command\ListStations::class,
-        )->setDescription('An example function to list stations in a table view.');
-    }, -1);
+return static function (CallableEventDispatcherInterface $dispatcher) {
+    $dispatcher->addListener(
+        Event\BuildConsoleCommands::class,
+        function (Event\BuildConsoleCommands $event) use ($dispatcher) {
+            $event->addAliases([
+                'example:list-stations' => Plugin\ExamplePlugin\Command\ListStations::class,
+            ]);
+        }
+    );
 
     // Tell the view handler to look for templates in this directory too
     $dispatcher->addListener(Event\BuildView::class, function(Event\BuildView $event) {
