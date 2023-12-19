@@ -56,7 +56,8 @@ For example, `/plugins/example-plugin/src` will autoload classes in the `\Plugin
 
 Most of the extensibility of plugins comes from events that use the EventDispatcher in AzuraCast. Both classes from inside AzuraCast and plugins are registered as "listeners" to common events that are dispatched by the system, so you can override or modify the core application's responses simply by adding your own listeners in the right order.
 
-See the `events.php` file included in this sample repository for an example of common events to listen to.
+See the [`events.php`](https://github.com/AzuraCast/example-plugin/blob/main/events.php) file included in this sample
+repository for an example of common events to listen to.
 
 As you can see, each event listener that you register has to provide the event that it listens to as a callable to the `addListener` method's first parameter, and each event listener receives an instance of that event class complete with relevant metadata already attached. Listeners also have a priority (the last argument in the function call); this number can be positive or negative, with the default handler tending to be around zero. Higher numbers are dispatched before lower numbers.
 
